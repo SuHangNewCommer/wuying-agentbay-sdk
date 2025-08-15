@@ -55,11 +55,13 @@ class ExtractOptions(Generic[T]):
     def __init__(self,
                  instruction: str,
                  schema: Type[T],
+                 use_text_extract: Optional[bool] = None,
                  selector: Optional[str] = None,
                  iframe: Optional[bool] = None,
                  domSettleTimeoutsMS: Optional[int] = None):
         self.instruction = instruction
         self.schema = schema
+        self.use_text_extract = use_text_extract
         self.selector = selector
         self.iframe = iframe
         self.domSettleTimeoutsMS = domSettleTimeoutsMS
@@ -288,6 +290,8 @@ class BrowserAgent(BaseService):
                 "schema": 'schema: ' + json.dumps(options.schema.model_json_schema())
             }
             print(f"Extracting from page: {page}, page_index: {page_index}, context_index: {context_index}, args: {args}")
+            if options.use_text_extract is not None:
+                args["use_text_extract"] = options.use_text_extract
             if options.selector is not None:
                 args["selector"] = options.selector
             if options.iframe is not None:
@@ -309,10 +313,10 @@ class BrowserAgent(BaseService):
                 success = data.get("success", False)
                 extract_objs = []
                 if success:
-                    extract_results = json.loads(data.get("extract_result", ""))
-                    for extract_result in extract_results:
-                        print("extract_result =", extract_result)
-                        extract_objs.append(options.schema.model_validate(extract_result))
+                    extract_results = data.get("extract_result")
+                    if extract_results and isinstance(extract_results, str):
+                        print("extract_result =", extract_results)
+                        extract_objs.append(options.schema.model_validate_json(extract_results))
                 else:
                     extract_results = data.get("extract_result", "")
                     print("Extract failed due to: ", extract_results)
@@ -339,6 +343,8 @@ class BrowserAgent(BaseService):
                 "schema": 'schema: ' + json.dumps(options.schema.model_json_schema())
             }
             print(f"Extracting from page: {page}, page_index: {page_index}, context_index: {context_index}, args: {args}")
+            if options.use_text_extract is not None:
+                args["use_text_extract"] = options.use_text_extract
             if options.selector is not None:
                 args["selector"] = options.selector
             if options.iframe is not None:
@@ -360,10 +366,10 @@ class BrowserAgent(BaseService):
                 success = data.get("success", False)
                 extract_objs = []
                 if success:
-                    extract_results = json.loads(data.get("extract_result", ""))
-                    for extract_result in extract_results:
-                        print("extract_result =", extract_result)
-                        extract_objs.append(options.schema.model_validate(extract_result))
+                    extract_results = data.get("extract_result")
+                    if extract_results and isinstance(extract_results, str):
+                        print("extract_result =", extract_results)
+                        extract_objs.append(options.schema.model_validate_json(extract_results))
                 else:
                     extract_results = data.get("extract_result", "")
                     print("Extract failed due to: ", extract_results)
